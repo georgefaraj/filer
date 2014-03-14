@@ -13,7 +13,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-//testing ing ing
 import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -39,8 +38,6 @@ public class GUI implements ActionListener, KeyListener
 	JPanel statusBar;
 	JLabel statusLabel;
 	boolean isSaved = true;
-
-	// NEW COMMENT
 
 	public GUI()
 	{
