@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -47,6 +49,7 @@ public class GUI implements ActionListener, KeyListener
 			aboutFrame = new JFrame("About Filer");
 			aboutFrame.setLocationRelativeTo(frame);
 			aboutFrame.setSize(300, 200);
+			aboutFrame.setResizable(false);
 			aboutFrame.setVisible(true);
 		}
 		else aboutFrame.toFront();
@@ -92,6 +95,7 @@ public class GUI implements ActionListener, KeyListener
 
 		// fileMenu
 		JMenu fileMenu = new JMenu("File");
+
 		newItem = new JMenuItem("New");
 		newItem.addActionListener(this);
 		newItem.setAccelerator(KeyStroke.getKeyStroke('N', KeyEvent.CTRL_DOWN_MASK));
@@ -122,10 +126,13 @@ public class GUI implements ActionListener, KeyListener
 
 		// editMenu
 		JMenu editMenu = new JMenu("Edit");
+
 		undoItem = new JMenuItem("Undo");
 		undoItem.setAccelerator(KeyStroke.getKeyStroke('Z', KeyEvent.CTRL_DOWN_MASK));
+
 		redoItem = new JMenuItem("Redo");
 		redoItem.setAccelerator(KeyStroke.getKeyStroke('Y', KeyEvent.CTRL_DOWN_MASK));
+
 		editMenu.add(undoItem);
 		editMenu.add(redoItem);
 
@@ -155,10 +162,12 @@ public class GUI implements ActionListener, KeyListener
 		});
 
 		fileChooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("TXT files", "txt");
-		fileChooser.setFileFilter(filter);
+		FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("TXT files", "txt");
+		FileNameExtensionFilter javaFilter = new FileNameExtensionFilter("JAVA files", "java");
+		fileChooser.addChoosableFileFilter(txtFilter);
+		fileChooser.addChoosableFileFilter(javaFilter);
 
-		frame.setTitle("Filer");
+		frame.setTitle("Filer - Untitled.txt");
 		frame.setSize(800, 600);
 		frame.setLocationRelativeTo(null);
 		frame.setJMenuBar(menuBar);
@@ -166,7 +175,7 @@ public class GUI implements ActionListener, KeyListener
 		frame.setVisible(true);
 	}
 
-	// returns true if you should continue (closing or making a new document), false otherwise
+	// returns true if you should continue (closing or making a new document), false if the user wants to cancel the action
 	public boolean saveCheck()
 	{
 		boolean isDone = true;
@@ -190,9 +199,11 @@ public class GUI implements ActionListener, KeyListener
 			statusLabel.setText("Status: Opening file");
 
 			int returnVal = fileChooser.showOpenDialog(fileChooser);
-			openedFile = fileChooser.getSelectedFile();
+
 			if (returnVal == fileChooser.APPROVE_OPTION)
 			{
+				openedFile = fileChooser.getSelectedFile();
+
 				try
 				{
 					readFile(openedFile);
@@ -278,7 +289,8 @@ public class GUI implements ActionListener, KeyListener
 				contents += (l + "\r\n"); // \n required for newlines, \r (carriage return) required for notepad
 			}
 			textPane.setText(contents);
-			statusLabel.setText("Status: " + file.getName() + " Opened sucessfully");
+			statusLabel.setText("Status: " + file.getName() + " opened sucessfully");
+			frame.setTitle("Filer - " + file.getName());
 		}
 		catch (Exception e)
 		{
@@ -294,11 +306,23 @@ public class GUI implements ActionListener, KeyListener
 	{
 		try
 		{
+			Pattern p = Pattern.compile("[^.]*");
+			Matcher m = p.matcher(file.getPath());
+			m.find();
+
+			String extension = "";
+			String descrip = fileChooser.getFileFilter().getDescription().substring(0, 3);
+			if (descrip.equals("TXT")) extension = ".txt";
+			else if (descrip.equals("JAV")) extension = ".java";
+
+			file = new File(m.group(0) + extension);
+
 			statusLabel.setText("Status: Saving file");
 			PrintWriter outputStream = new PrintWriter(new FileWriter(file));
 			outputStream.print(textPane.getText());
 			outputStream.close();
 			statusLabel.setText("Status: " + file.getName() + " Saved sucessfully");
+			frame.setTitle("Filer - " + file.getName());
 			isSaved = true;
 		}
 		catch (Exception ex)
