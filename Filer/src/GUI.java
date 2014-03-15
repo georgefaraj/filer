@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -24,20 +25,32 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class GUI implements ActionListener, KeyListener
 {
-	JFrame frame;
+	JFrame frame, aboutFrame;
 	JMenuItem newItem, openItem, saveItem, saveAsItem, undoItem, redoItem, aboutItem, syncItem, exitItem;
 	JTextPane textPane;
 	JFileChooser fileChooser;
 	File openedFile;
 	JPanel statusBar;
-	JLabel statusLabel;
+	JLabel statusLabel, wordCountLabel;
 	boolean isSaved = true;
+
+	public void aboutFrame()
+	{
+		if (aboutFrame == null)
+		{
+			aboutFrame = new JFrame("About Filer");
+			aboutFrame.setLocationRelativeTo(frame);
+			aboutFrame.setSize(300, 200);
+			aboutFrame.setVisible(true);
+		}
+		else aboutFrame.toFront();
+	}
 
 	public GUI()
 	{
@@ -54,11 +67,17 @@ public class GUI implements ActionListener, KeyListener
 
 		// statusBar
 		statusBar = new JPanel();
-		statusBar.setBorder(new BevelBorder(BevelBorder.RAISED));
-		statusBar.setPreferredSize(new Dimension(frame.getWidth(), 25));
-		statusBar.setLayout((new BoxLayout(statusBar, BoxLayout.X_AXIS)));
-		statusLabel = new JLabel("Idle");
+		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.LINE_AXIS));
+		statusBar.setPreferredSize(new Dimension(frame.getWidth(), 20));
+		statusLabel = new JLabel("Status: Idle");
+		wordCountLabel = new JLabel("Words: 0");
+		statusBar.add(Box.createHorizontalStrut(10));
 		statusBar.add(statusLabel);
+		statusBar.add(Box.createHorizontalStrut(10));
+		statusBar.add(new JLabel("|"));
+		statusBar.add(Box.createHorizontalStrut(10));
+		statusBar.add(wordCountLabel);
+
 		frame.add(statusBar, BorderLayout.SOUTH);
 
 		// textPane
@@ -75,24 +94,38 @@ public class GUI implements ActionListener, KeyListener
 		JMenu fileMenu = new JMenu("File");
 		newItem = new JMenuItem("New");
 		newItem.addActionListener(this);
+		newItem.setAccelerator(KeyStroke.getKeyStroke('N', KeyEvent.CTRL_DOWN_MASK));
+
 		openItem = new JMenuItem("Open");
 		openItem.addActionListener(this);
+		openItem.setAccelerator(KeyStroke.getKeyStroke('O', KeyEvent.CTRL_DOWN_MASK));
+
 		saveItem = new JMenuItem("Save");
 		saveItem.addActionListener(this);
+		saveItem.setAccelerator(KeyStroke.getKeyStroke('S', KeyEvent.CTRL_DOWN_MASK));
+
 		saveAsItem = new JMenuItem("Save As");
 		saveAsItem.addActionListener(this);
+		saveAsItem.setAccelerator(KeyStroke.getKeyStroke('S', KeyEvent.CTRL_DOWN_MASK + KeyEvent.SHIFT_DOWN_MASK));
+
 		exitItem = new JMenuItem("Exit");
 		exitItem.addActionListener(this);
+		exitItem.setAccelerator(KeyStroke.getKeyStroke('E', KeyEvent.CTRL_DOWN_MASK));
+
 		fileMenu.add(newItem);
 		fileMenu.add(openItem);
+		fileMenu.addSeparator();
 		fileMenu.add(saveItem);
 		fileMenu.add(saveAsItem);
+		fileMenu.addSeparator();
 		fileMenu.add(exitItem);
 
 		// editMenu
 		JMenu editMenu = new JMenu("Edit");
 		undoItem = new JMenuItem("Undo");
+		undoItem.setAccelerator(KeyStroke.getKeyStroke('Z', KeyEvent.CTRL_DOWN_MASK));
 		redoItem = new JMenuItem("Redo");
+		redoItem.setAccelerator(KeyStroke.getKeyStroke('Y', KeyEvent.CTRL_DOWN_MASK));
 		editMenu.add(undoItem);
 		editMenu.add(redoItem);
 
@@ -125,13 +158,12 @@ public class GUI implements ActionListener, KeyListener
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("TXT files", "txt");
 		fileChooser.setFileFilter(filter);
 
-		frame.setTitle("FileSharer");
+		frame.setTitle("Filer");
 		frame.setSize(800, 600);
 		frame.setLocationRelativeTo(null);
 		frame.setJMenuBar(menuBar);
 		frame.setDefaultCloseOperation(frame.DO_NOTHING_ON_CLOSE);
 		frame.setVisible(true);
-
 	}
 
 	// returns true if you should continue (closing or making a new document), false otherwise
@@ -155,7 +187,7 @@ public class GUI implements ActionListener, KeyListener
 	{
 		if (e.getSource() == openItem)
 		{
-			statusLabel.setText("Opening file");
+			statusLabel.setText("Status: Opening file");
 
 			int returnVal = fileChooser.showOpenDialog(fileChooser);
 			openedFile = fileChooser.getSelectedFile();
@@ -187,12 +219,25 @@ public class GUI implements ActionListener, KeyListener
 		{
 			if (saveCheck()) System.exit(0);
 		}
+		else if (e.getSource() == aboutItem)
+		{
+			aboutFrame();
+		}
 
+	}
+
+	private void newFile()
+	{
+		if (saveCheck())
+		{
+			textPane.setText("");
+			statusLabel.setText("Status: New file created");
+		}
 	}
 
 	private boolean saveFile()
 	{
-		statusLabel.setText("Saving file");
+		statusLabel.setText("Status: Saving file");
 
 		if (openedFile == null) return saveFileAs();
 		else
@@ -202,22 +247,10 @@ public class GUI implements ActionListener, KeyListener
 		}
 	}
 
-	private void newFile()
-	{
-		boolean temp = saveCheck();
-		if (temp)
-		{
-			System.out.println("Is saved?:" + isSaved);
-			System.out.println("Save check: " + temp);
-			textPane.setText("");
-			statusLabel.setText("New file created");
-		}
-	}
-
 	// returns true if the file was saved, or if the user doesn't want to save. Should probably be refactored..
 	private boolean saveFileAs()
 	{
-		statusLabel.setText("Saving file");
+		statusLabel.setText("Status: Saving file");
 
 		int returnVal = fileChooser.showSaveDialog(fileChooser);
 		if (returnVal == fileChooser.APPROVE_OPTION)
@@ -245,7 +278,7 @@ public class GUI implements ActionListener, KeyListener
 				contents += (l + "\r\n"); // \n required for newlines, \r (carriage return) required for notepad
 			}
 			textPane.setText(contents);
-			statusLabel.setText(file.getName() + " Opened sucessfully");
+			statusLabel.setText("Status: " + file.getName() + " Opened sucessfully");
 		}
 		catch (Exception e)
 		{
@@ -261,33 +294,35 @@ public class GUI implements ActionListener, KeyListener
 	{
 		try
 		{
-			statusLabel.setText("Saving file");
+			statusLabel.setText("Status: Saving file");
 			PrintWriter outputStream = new PrintWriter(new FileWriter(file));
 			outputStream.print(textPane.getText());
 			outputStream.close();
-			statusLabel.setText(file.getName() + " Saved sucessfully");
+			statusLabel.setText("Status: " + file.getName() + " Saved sucessfully");
 			isSaved = true;
 		}
 		catch (Exception ex)
 		{
+
 		}
 	}
 
-	private void checkShortcut(KeyEvent e)
+	private void updateWordLabel()
 	{
+		wordCountLabel.setText("Words: " + wordCount());
+	}
 
-		if (e.getKeyCode() == KeyEvent.VK_N)
-		{
-			if (e.getModifiers() == KeyEvent.CTRL_DOWN_MASK)
-			{
-				newFile();
-			}
-		}
+	private int wordCount()
+	{
+		return textPane.getText().split("\\s+").length;
 	}
 
 	public void keyPressed(KeyEvent e)
 	{
-		checkShortcut(e);
+		if (e.getKeyCode() == KeyEvent.VK_SPACE)
+		{
+			updateWordLabel();
+		}
 	}
 
 	public void keyReleased(KeyEvent e)
