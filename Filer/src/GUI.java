@@ -43,7 +43,7 @@ public class GUI implements ActionListener, KeyListener
 	JPanel statusBar;
 	String status = "Idle", oldStatus = "";
 	JLabel statusLabel, wordCountLabel;
-	boolean isSaved = true;
+	boolean isSaved = true, timerRunning;
 	Timer timer;
 
 	public void aboutFrame()
@@ -62,6 +62,7 @@ public class GUI implements ActionListener, KeyListener
 	public GUI()
 	{
 		frame = new JFrame();
+		timer = new Timer();
 
 		try
 		{
@@ -178,24 +179,26 @@ public class GUI implements ActionListener, KeyListener
 		frame.setDefaultCloseOperation(frame.DO_NOTHING_ON_CLOSE);
 		frame.setVisible(true);
 
-		timer = new Timer();
-		timer.scheduleAtFixedRate(new Task(), 0, 10_000);
+	}
+
+	private void updateStatus(String s)
+	{
+		statusLabel.setText("Status: " + s);
 	}
 
 	public class Task extends TimerTask
 	{
 		public void run()
 		{
-			updateStatus();
+			updateStatus("Idle");
 		}
 
 	}
 
-	private void updateStatus()
+	private void startTimer()
 	{
-		status = (status.equals(oldStatus)) ? "Idle" : status;
-		oldStatus = status;
-		statusLabel.setText("Status: " + status);
+		timer.scheduleAtFixedRate(new Task(), 0, 10_000);
+		timerRunning = true;
 	}
 
 	// returns true if you should continue (closing or making a new document), false if the user wants to cancel the action
@@ -219,9 +222,7 @@ public class GUI implements ActionListener, KeyListener
 	{
 		if (e.getSource() == openItem)
 		{
-			status = "Opening File";
-			updateStatus();
-
+			updateStatus("Opening file");
 			int returnVal = fileChooser.showOpenDialog(fileChooser);
 
 			if (returnVal == fileChooser.APPROVE_OPTION)
@@ -266,15 +267,13 @@ public class GUI implements ActionListener, KeyListener
 		if (saveCheck())
 		{
 			textPane.setText("");
-			status = "New File Created";
-			updateStatus();
+			updateStatus("New File Created");
 		}
 	}
 
 	private boolean saveFile()
 	{
-		status = "Saving File";
-		updateStatus();
+		updateStatus("Saving File");
 
 		if (openedFile == null) return saveFileAs();
 		else
@@ -287,8 +286,7 @@ public class GUI implements ActionListener, KeyListener
 	// returns true if the file was saved, or if the user doesn't want to save. Should probably be refactored..
 	private boolean saveFileAs()
 	{
-		status = "Saving File";
-		updateStatus();
+		updateStatus("Saving File");
 
 		int returnVal = fileChooser.showSaveDialog(fileChooser);
 		if (returnVal == fileChooser.APPROVE_OPTION)
@@ -316,8 +314,7 @@ public class GUI implements ActionListener, KeyListener
 				contents += (l + "\r\n"); // \n required for newlines, \r (carriage return) required for notepad
 			}
 			textPane.setText(contents);
-			status = file.getName() + " opened sucessfully";
-			updateStatus();
+			updateStatus(file.getName() + " opened sucessfully");
 			frame.setTitle("Filer - " + file.getName());
 		}
 		catch (Exception e)
@@ -348,8 +345,7 @@ public class GUI implements ActionListener, KeyListener
 			PrintWriter outputStream = new PrintWriter(new FileWriter(file));
 			outputStream.print(textPane.getText());
 			outputStream.close();
-			status = file.getName() + " Saved sucessfully";
-			updateStatus();
+			updateStatus(file.getName() + " Saved sucessfully");
 			frame.setTitle("Filer - " + file.getName());
 			isSaved = true;
 		}
@@ -361,18 +357,17 @@ public class GUI implements ActionListener, KeyListener
 
 	private void updateWordLabel()
 	{
-		wordCountLabel.setText("Words: " + wordCount());
+		wordCountLabel.setText("Words: " + findWordCount());
 	}
 
-	private int wordCount()
+	private int findWordCount()
 	{
 		return textPane.getText().split("\\s+").length;
 	}
 
 	public void keyPressed(KeyEvent e)
 	{
-		status = "Typing";
-		updateStatus();
+		updateStatus("Typing");
 		if (e.getKeyCode() == KeyEvent.VK_SPACE)
 		{
 			updateWordLabel();
@@ -382,6 +377,7 @@ public class GUI implements ActionListener, KeyListener
 	public void keyReleased(KeyEvent e)
 	{
 		isSaved = false;
+		startTimer();
 	}
 
 	public void keyTyped(KeyEvent e)
