@@ -178,7 +178,6 @@ public class GUI implements ActionListener, KeyListener
 		frame.setJMenuBar(menuBar);
 		frame.setDefaultCloseOperation(frame.DO_NOTHING_ON_CLOSE);
 		frame.setVisible(true);
-
 	}
 
 	private void updateStatus(String s)
@@ -192,14 +191,12 @@ public class GUI implements ActionListener, KeyListener
 		{
 			updateStatus("Idle");
 		}
-
 	}
 
 	private void startTimer()
 	{
 		timer.scheduleAtFixedRate(new Task(), 0, 10_000);
 		timerRunning = true;
-		// blah
 	}
 
 	// returns true if you should continue (closing or making a new document), false if the user wants to cancel the action
@@ -269,6 +266,7 @@ public class GUI implements ActionListener, KeyListener
 		{
 			textPane.setText("");
 			updateStatus("New File Created");
+			frame.setTitle("Filer - Untitled.txt");
 		}
 	}
 
@@ -332,12 +330,14 @@ public class GUI implements ActionListener, KeyListener
 	{
 		try
 		{
+
+			// dealing with saving with extensions
 			Pattern p = Pattern.compile("[^.]*");
 			Matcher m = p.matcher(file.getPath());
 			m.find();
 
-			String extension = "";
 			String descrip = fileChooser.getFileFilter().getDescription().substring(0, 3);
+			String extension = "";
 			if (descrip.equals("TXT")) extension = ".txt";
 			else if (descrip.equals("JAV")) extension = ".java";
 
