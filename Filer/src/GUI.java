@@ -199,6 +199,7 @@ public class GUI implements ActionListener, KeyListener
 	{
 		timer.scheduleAtFixedRate(new Task(), 0, 10_000);
 		timerRunning = true;
+		// blah
 	}
 
 	// returns true if you should continue (closing or making a new document), false if the user wants to cancel the action
