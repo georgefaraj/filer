@@ -32,6 +32,7 @@ import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
+//import javax.swing.undo.undomanager;
 
 public class GUI implements ActionListener, KeyListener
 {
@@ -195,7 +196,7 @@ public class GUI implements ActionListener, KeyListener
 
 	private void startTimer()
 	{
-		timer.scheduleAtFixedRate(new Task(), 0, 10_000);
+		timer.scheduleAtFixedRate(new Task(), 0, 10000);
 		timerRunning = true;
 	}
 
